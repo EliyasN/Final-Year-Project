@@ -1,0 +1,709 @@
+SOURCE CODE:
+
+from flask import Flask, render_template, request, session, flash
+from flask import Flask, render_template, flash, request, session
+from flask import render_template, redirect, url_for, request
+import sys, fsdk, math, ctypes, time
+import mysql.connector
+import hmac
+import hashlib
+import binascii
+import random
+import datetime
+app = Flask( name )
+app.config['SECRET_KEY'] = 'aaa'
+@app.route('/')
+def home():
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cur = conn.cursor()
+cur.execute("SELECT * FROM protb ")
+data = cur.fetchall()
+return render_template('index.html', data=data)
+@app.route('/AdminLogin')
+def AdminLogin():
+
+
+
+return render_template('AdminLogin.html')
+@app.route('/NewUser')
+def NewUser():
+return render_template('NewUser.html')
+@app.route('/UserLogin')
+def UserLogin():
+return render_template('UserLogin.html') @app.route('/NewShopKeeper')
+def NewShopKeeper():
+return render_template('NewShopKeeper.html')
+@app.route('/ShopKeeperLogin')
+def ShopKeeperLogin():
+return render_template('ShopKeeperLogin.html')
+@app.route("/adminlogin", methods=['GET', 'POST'])
+def adminlogin():
+error = None
+if request.method == 'POST':
+if request.form['uname'] == 'admin' and request.form['password'] == 'admin':
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cur = conn.cursor()
+cur.execute("SELECT * FROM regtb ")
+data = cur.fetchall()
+flash("you are successfully Login")
+return render_template('AdminHome.html', data=data)
+
+
+else:
+flash("UserName or Password Incorrect!")
+return render_template('AdminLogin.html')
+@app.route('/NewProduct')
+def NewProduct():
+return render_template('NewProduct.html')
+@app.route("/AdminHome")
+def AdminHome():
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cur = conn.cursor()
+cur.execute("SELECT * FROM regtb ")
+data = cur.fetchall()
+return render_template('AdminHome.html', data=data)
+@app.route("/newproduct", methods=['GET', 'POST'])
+def newproduct():
+if request.method == 'POST':
+pname = request.form['pname']
+ptype = request.form['ptype']
+price = request.form['price']
+offer = request.form['offer']
+info = request.form['info']
+qty = request.form['qty']
+import random
+file = request.files['file']
+
+
+fnew = random.randint(1111, 9999)
+savename = str(fnew) + ".png"
+file.save("static/upload/" + savename)
+print(price)
+print(offer)
+offeramount = float(price) * (float(offer) / 100)
+print(offeramount)
+total = float(price) - float(offeramount)
+print(total)
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cursor = conn.cursor()
+cursor.execute(
+"insert into protb values('','" + pname + "','" + ptype + "','" + str(
+price) + "','" + str(offer) + "','" + str(total) + "','" + info + "','" + savename + "','" +
+str(
+qty) + "')")
+conn.commit()
+conn.close()
+flash('Product Info Save Successfully!')
+return render_template('NewProduct.html')
+@app.route("/ProductInfo")
+def ProductInfo():
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+
+
+cur = conn.cursor()
+cur.execute("SELECT * FROM protb ")
+data = cur.fetchall()
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cur = conn.cursor()
+cur.execute("SELECT * FROM protb where Qty <= 4 ")
+data1 = cur.fetchall()
+msg = ''
+iii = 0
+for item1 in data1:
+pname = "ProductName : " + item1[1] + ""
+qty = "Quantity : " + str(item1[8]) + "\n"
+msg += pname + qty
+iii = 1
+# print(msg)
+if iii == 1:
+sendmsg("sangeeth5535@gmail.com", msg)
+return render_template('ProductInfo.html', data=data)
+def sendmsg(Mailid, message):
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
+
+
+fromaddr = "projectmailm@gmail.com"
+toaddr = Mailid
+# instance of MIMEMultipart
+msg = MIMEMultipart()
+# storing the senders email address
+msg['From'] = fromaddr
+# storing the receivers email address
+msg['To'] = toaddr
+# storing the subject
+msg['Subject'] = "Alert"
+# string to store the body of the mail
+body = message
+# attach the body with the msg instance
+msg.attach(MIMEText(body, 'plain'))
+# creates SMTP session
+s = smtplib.SMTP('smtp.gmail.com', 587)
+# start TLS for security
+s.starttls()
+# Authentication
+s.login(fromaddr, "qmgn xecl bkqv musr")
+# Converts the Multipart msg into a string
+text = msg.as_string()
+# sending the mail
+s.sendmail(fromaddr, toaddr, text)
+
+
+# terminating the session
+s.quit()
+@app.route("/SProductInfo")
+def SProductInfo():
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cur = conn.cursor()
+cur.execute("SELECT * FROM protb ")
+data = cur.fetchall()
+return render_template('SProductInfo.html', data=data)
+@app.route("/SalesInfo")
+def SalesInfo():
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cur = conn.cursor()
+cur.execute("SELECT * FROM carttb where Status='1' ")
+data1 = cur.fetchall()
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cur = conn.cursor()
+cur.execute("SELECT * FROM booktb ")
+data2 = cur.fetchall()
+return render_template('SalesInfo.html', data1=data1, data2=data2)
+@app.route("/Remove")
+def Remove():
+
+
+id = request.args.get('id')
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cursor = conn.cursor()
+cursor.execute(
+"delete from protb where id='" + id + "'")
+conn.commit()
+conn.close()
+flash('Product info Remove Successfully!')
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cur = conn.cursor()
+cur.execute("SELECT * FROM protb ")
+data = cur.fetchall()
+return render_template('ProductInfo.html', data=data)
+@app.route("/hsearch")
+def hsearch():
+id = request.args.get('id')
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cur = conn.cursor()
+cur.execute("SELECT * FROM protb where ProductType='" + id + "' ")
+data = cur.fetchall()
+return render_template('index.html', data=data)
+@app.route("/newuser", methods=['GET', 'POST'])
+
+
+
+def newuser():
+if request.method == 'POST':
+name = request.form['name']
+mobile = request.form['mobile']
+email = request.form['email']
+address = request.form['address']
+username = request.form['uname']
+password = request.form['password']
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cursor = conn.cursor()
+cursor.execute(
+"insert into regtb values('','" + name + "','" + mobile + "','" + email + "','" + address
++ "','" + username + "','" + password + "')")
+conn.commit()
+conn.close()
+import LiveRecognition as liv
+# liv.att()
+del sys.modules["LiveRecognition"]
+flash("Record Saved!")
+return render_template('UserLogin.html')
+@app.route("/newkeeper", methods=['GET', 'POST'])
+def newkeeper():
+if request.method == 'POST':
+name = request.form['name']
+
+
+mobile = request.form['mobile']
+email = request.form['email']
+address = request.form['address']
+username = request.form['uname']
+password = request.form['password']
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cursor = conn.cursor()
+cursor.execute(
+"insert into keepertb values('','" + name + "','" + mobile + "','" + email + "','" +
+address + "','" + username + "','" + password + "')")
+conn.commit()
+conn.close()
+flash("Record Saved!")
+return render_template('NewShopKeeper.html')
+@app.route("/keeperlogin", methods=['GET', 'POST'])
+def keeperlogin():
+if request.method == 'POST':
+username = request.form['uname']
+password = request.form['password']
+session['uname'] = request.form['uname']
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cursor = conn.cursor()
+cursor.execute("SELECT * from keepertb where username='" + username + "'
+and password='" + password + "'")
+
+
+data = cursor.fetchone()
+if data is None:
+flash('Username or Password is wrong')
+return render_template('NewShopKeeper.html', data=data)
+else:
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cur = conn.cursor()
+cur.execute("SELECT * FROM keepertb where username='" + username + "' and
+password='" + password + "'")
+data = cur.fetchall()
+flash("you are successfully logged in")
+return render_template('ShopkeeperHome.html', data=data)
+@app.route('/ShopkeeperHome')
+def ShopkeeperHome():
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cur = conn.cursor()
+cur.execute("SELECT * FROM keepertb where username='" + session['uname']
++ "' ")
+data = cur.fetchall()
+return render_template('UserHome.html', data=data)
+@app.route("/userlogin", methods=['GET', 'POST'])
+def userlogin():
+if request.method == 'POST':
+username = request.form['uname']
+
+
+
+password = request.form['password']
+session['uname'] = request.form['uname']
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cursor = conn.cursor()
+cursor.execute("SELECT * from regtb where username='" + username + "' and
+password='" + password + "'")
+data = cursor.fetchone()
+if data is None:
+flash('Username or Password is wrong')
+return render_template('UserLogin.html', data=data)
+else:
+mob = data[2]
+email = data[3]
+import random
+n = random.randint(1111, 9999)
+sendmsg(mob, "Your OTP" + str(n))
+sendmail(email, "Your OTP" + str(n))
+session['otp'] = str(n)
+# flash("you are successfully logged in")
+return render_template('OTP.html', data=data)
+@app.route("/otplogin", methods=['GET', 'POST'])
+def otplogin():
+error = None
+if request.method == 'POST':
+
+
+
+username = request.form['ot']
+if session['otp'] == username:
+username1 = session['uname']
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cur = conn.cursor()
+cur.execute("SELECT * FROM regtb where username='" + username1 + "'")
+data = cur.fetchall()
+flash("you are successfully logged in")
+return render_template('UserHome.html', data=data)
+else:
+flash('OTP is Incorrect!')
+return render_template('OTP.html')
+@app.route('/UserHome')
+def UserHome():
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cur = conn.cursor()
+cur.execute("SELECT * FROM regtb where username='" + session['uname'] +
+"' ")
+data = cur.fetchall()
+return render_template('UserHome.html', data=data)
+@app.route('/Search')
+def Search():
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+
+
+
+cur = conn.cursor()
+cur.execute("SELECT * FROM protb ")
+data = cur.fetchall()
+return render_template('Search.html', data=data)
+@app.route("/csearch", methods=['GET', 'POST'])
+def csearch():
+if request.method == 'POST':
+ptype = request.form['ptype']
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cur = conn.cursor()
+cur.execute(
+"SELECT * FROM protb where ProductType='" + ptype + "' ")
+data = cur.fetchall()
+return render_template('Search.html', data=data)
+@app.route("/add")
+def add():
+flash("Please Login")
+return render_template('index.html')
+@app.route("/Add")
+def Add():
+id = request.args.get('id')
+session['pid'] = id
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+
+
+
+cursor = conn.cursor()
+cursor.execute("SELECT * FROM protb where id='" + id + "'")
+data = cursor.fetchone()
+if data:
+name = data[1]
+desc = data[6]
+amount = data[5]
+image = data[7]
+else:
+return 'Incorrect username / password !'
+return render_template('FullInfo.html', name=name, desc=desc,
+amount=amount, image=image)
+@app.route("/addcart", methods=['GET', 'POST'])
+def addcart():
+if request.method == 'POST':
+import datetime
+date = datetime.datetime.now().strftime('%Y-%m-%d')
+pid = session['pid']
+uname = session['uname']
+qty = request.form['qty']
+# pmode = request.form['pmode']
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cursor = conn.cursor()
+cursor.execute("SELECT * FROM protb where id='" + str(pid) + "'")
+
+
+
+data = cursor.fetchone()
+if data:
+ProductName = data[1]
+Producttype = data[2]
+price = data[5]
+cQty = data[8]
+Image = data[7]
+else:
+return 'No Record Found!'
+tprice = float(price) * float(qty)
+clqty = float(cQty) - float(qty)
+if clqty < 0:
+flash('Low Product ')
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cur = conn.cursor()
+cur.execute("SELECT * FROM protb where id='" + pid + "' ")
+data = cur.fetchall()
+return render_template('AddCart.html', data=data)
+else:
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cursor = conn.cursor()
+cursor.execute(
+"SELECT count(*) As count FROM booktb ")
+
+
+data = cursor.fetchone()
+if data:
+bookno = data[0]
+print(bookno)
+if bookno == 'Null' or bookno == 0:
+bookno = 1
+else:
+bookno += 1
+else:
+return 'Incorrect username / password !'
+bookno = 'BOOKID' + str(bookno)
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cursor = conn.cursor()
+cursor.execute(
+"INSERT INTO carttb VALUES ('','" + uname + "','" + ProductName + "','" +
+Producttype + "','" + str(
+price) + "','" + str(qty) + "','" + str(tprice) + "','" +
+Image + "','" + date + "','0','" + bookno + "')")
+conn.commit()
+conn.close()
+flash('Product Add to Card Successfully')
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cur = conn.cursor()
+
+
+
+cur.execute("SELECT * FROM protb ")
+data = cur.fetchall()
+return render_template('Search.html', data=data)
+@app.route("/Cart")
+def Cart():
+uname = session['uname']
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cur = conn.cursor()
+cur.execute("SELECT * FROM carttb where UserName='" + uname + "' and
+Status='0' ")
+data = cur.fetchall()
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cursor = conn.cursor()
+cursor.execute(
+"SELECT sum(Qty) as qty ,sum(Tprice) as Tprice FROM carttb where
+UserName='" + uname + "' and Status='0' ")
+data1 = cursor.fetchone()
+if data1:
+tqty = data1[0]
+tprice = data1[1]
+else:
+return 'No Record Found!'
+return render_template('Cart.html', data=data, tqty=tqty, tprice=tprice)
+@app.route("/RemoveCart")
+
+
+
+def RemoveCart():
+id = request.args.get('id')
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cursor = conn.cursor()
+cursor.execute(
+"delete from carttb where id='" + id + "'")
+conn.commit()
+conn.close()
+flash('Product Remove Successfully!')
+uname = session['uname']
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cur = conn.cursor()
+cur.execute("SELECT * FROM carttb where UserName='" + uname + "' and
+Status='0' ")
+data = cur.fetchall()
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cursor = conn.cursor()
+cursor.execute(
+"SELECT sum(Qty) as qty ,sum(Tprice) as Tprice FROM carttb where
+UserName='" + uname + "' and Status='0' ")
+data1 = cursor.fetchone()
+if data1:
+tqty = data1[0]
+
+
+
+= data1[1]
+return render_template('Cart.html', data=data, tqty=tqty, tprice=tprice)
+def loginvales1():
+uname = session['uname']
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cursor = conn.cursor()
+cursor.execute("SELECT * FROM regtb where UserName='" + uname + "'")
+data = cursor.fetchone()
+if data:
+Email = data[3]
+Phone = data[2]
+else:
+return 'Incorrect username / password !'
+return uname, Email, Phone
+@app.route("/payment", methods=['GET', 'POST'])
+def payment():
+if request.method == 'POST':
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cursor = conn.cursor()
+cursor.execute("truncate table temptb")
+conn.commit()
+conn.close()
+try:
+
+
+
+import MyNewCode as liv1
+del sys.modules["MyNewCode"]
+except OSError as e:
+print("Caught OSError:", e)
+uname = session['uname']
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cursor = conn.cursor()
+cursor.execute("SELECT * from temptb where UserName='" + uname + "' ")
+data = cursor.fetchone()
+if data is None:
+flash('Face is wrong')
+return render_template('Cart.html')
+else:
+import datetime
+date = datetime.datetime.now().strftime('%Y-%m-%d')
+uname = session['uname']
+cname = request.form['cname']
+Cardno = request.form['cno']
+Cvno = request.form['cvno']
+tqty=0
+tprice=0
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cursor = conn.cursor()
+
+
+
+cursor.execute(
+"SELECT sum(Qty) as qty ,sum(Tprice) as Tprice FROM carttb where
+UserName='" + uname + "' and Status='0' ")
+data1 = cursor.fetchone()
+if data1:
+tqty = data1[0]
+tprice = data1[1]
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cursor = conn.cursor()
+cursor.execute(
+"SELECT count(*) As count FROM booktb ")
+data = cursor.fetchone()
+if data:
+bookno = data[0]
+print(bookno)
+if bookno == 'Null' or bookno == 0:
+bookno = 1
+else:
+bookno += 1
+else:
+return 'Incorrect username / password !'
+bookno = 'BOOKID' + str(bookno)
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+
+
+cursor = conn.cursor()
+cursor.execute(
+"update carttb set status='1',Bookid='" + bookno + "' where UserName='" +
+uname + "' ")
+conn.commit()
+conn.close()
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cursor = conn.cursor()
+cursor.execute(
+"INSERT INTO booktb VALUES ('','" + uname + "','" + bookno + "','" + str(tqty)
++ "','" + str(
+tprice) + "','" + cname + "','" + Cardno + "','" + Cvno + "','" + date + "')")
+conn.commit()
+conn.close()
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cur = conn.cursor()
+cur.execute("SELECT * FROM carttb where UserName='" + uname + "' and
+Status='1' ")
+data1 = cur.fetchall()
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cur = conn.cursor()
+cur.execute("SELECT * FROM booktb where username='" + uname + "'")
+data2 = cur.fetchall()
+
+
+
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cursor = conn.cursor()
+cursor.execute("SELECT * from regtb where username='" + uname + "'")
+data33 = cursor.fetchone()
+if data33:
+mob = data33[2]
+sendmsg(mob, 'Product On the Way')
+flash('Payment Successfully..!')
+return render_template('UserBook.html', data1=data1, data2=data2)
+@app.route("/BookInfo")
+def BookInfo():
+uname = session['uname']
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cur = conn.cursor()
+cur.execute("SELECT * FROM carttb where UserName='" + uname + "' and
+Status='1' ")
+data1 = cur.fetchall()
+conn = mysql.connector.connect(user='root', password='', host='localhost',
+database='25onlinemobiledb')
+cur = conn.cursor()
+cur.execute("SELECT * FROM booktb where username='" + uname + "'")
+data2 = cur.fetchall()
+return render_template('UserBook.html', data1=data1, data2=data2)
+def sendmsg(targetno, message):
+
+
+
+import requests
+requests.post(
+"http://sms.creativepoint.in/api/push.json?apikey=6555c521622c1&route=transs
+ms&sender=FSSMSS&mobileno=" + targetno + "&text=Dear customer your
+msg is " + message + " Sent By FSMSG FSSMSS")
+def sendmail(Mailid, message):
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
+fromaddr = "projectmailm@gmail.com"
+toaddr = Mailid
+# instance of MIMEMultipart
+msg = MIMEMultipart()
+# storing the senders email address
+msg['From'] = fromaddr
+# storing the receivers email address
+msg['To'] = toaddr
+# storing the subject
+msg['Subject'] = "Alert"
+# string to store the body of the mail
+body = message
+# attach the body with the msg instance
+msg.attach(MIMEText(body, 'plain'))
+
+
+# creates SMTP session
+s = smtplib.SMTP('smtp.gmail.com', 587)
+# start TLS for security
+s.starttls()
+# Authentication
+s.login(fromaddr, "qmgn xecl bkqv musr")
+# Converts the Multipart msg into a string
+text = msg.as_string()
+# sending the mail
+s.sendmail(fromaddr, toaddr, text)
+# terminating the session
+s.quit()
+if name == ' main ':
+app.run(debug=True, use_reloader=True)
+
+
